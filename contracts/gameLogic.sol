@@ -126,6 +126,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     uint256[10] columns;
     mapping (uint => bool) columnNums;
 
+    mapping (address => uint) betsPerPerson;
+
     struct Square {
         address bettor;
         bool hasBet; 
@@ -164,11 +166,14 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     }
 
     function placeBet(uint256 x, uint256 y) payable external {
+        address bettor = _msgSender();
+        require(betsPerPerson[bettor] < 10, "You can only place bets on 10 squares");
         require(Square[x][y].hasBet == false, "This square already has a bet placed");
         require(msg.value == betAmount, "Please send the proper amount to place a bet");
         board[x][y] = Square mySquare;
-        mySquare.bettor = _msgSender();
+        mySquare.bettor = bettor;
         mySquare.hasBet = true;
+        betersPerPerson[bettor] += 1;
         prizePool += betAmount; 
     }
 
