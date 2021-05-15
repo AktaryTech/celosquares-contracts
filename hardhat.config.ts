@@ -3,7 +3,6 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-solhint";
 import "@nomiclabs/hardhat-waffle";
-import "@tenderly/hardhat-tenderly";
 import "@ubeswap/hardhat-celo";
 import { fornoURLs, ICeloNetwork } from "@ubeswap/hardhat-celo";
 import "dotenv/config";
@@ -48,7 +47,6 @@ export default {
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
     currency: "USD",
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     excludeContracts: ["contracts/mocks/", "contracts/libraries/"],
   },
   networks: {
@@ -98,10 +96,6 @@ export default {
   spdxLicenseIdentifier: {
     overwrite: false,
     runOnCompile: true,
-  },
-  tenderly: {
-    project: process.env.TENDERLY_PROJECT,
-    username: process.env.TENDERLY_USERNAME,
   },
   watcher: {
     compile: {
