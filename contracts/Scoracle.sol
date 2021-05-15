@@ -57,15 +57,7 @@ contract Scoracle is Ownable {
             block.timestamp
         );
     }
-
-    function getTeamDataForQuarter(uint256 _gameid, uint256 _quarter, uint256 _teamid) internal view returns(uint256, uint256, uint256) {
-        return (
-            teamStatsForQuarter[_gameid][_quarter][_teamid].gameID, 
-            teamStatsForQuarter[_gameid][_quarter][_teamid].teamID, 
-            teamStatsForQuarter[_gameid][_quarter][_teamid].score
-        );
-    }
-
+    
     function getTeamsDataForQuarter(uint256 _gameid, uint256 _quarter, uint256 _team1id, uint256 _team2id) internal view returns(uint256, uint256, uint256, uint256, uint256, uint256) {
         return (
             teamStatsForQuarter[_gameid][_quarter][_team1id].gameID, 
