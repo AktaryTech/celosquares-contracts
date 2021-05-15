@@ -32,7 +32,7 @@ contract Scoracle is Ownable {
     /**
      * @dev - Call this function to send the data in the smart contract
      */
-    function recordScore(uint256 _gameid, uint256 _quarter, uint256 _team1id, uint256 _team2id, uint256 _team1score, uint256 _team2score) external onlyOwner {
+    function recordScore(uint256 _gameid, uint256 _quarter, uint256 _team1id, uint256 _team2id, uint256 _team1score, uint256 _team2score) external {
 
         // set team 1 stats for Quarter
         teamStatsForQuarter[_gameid][_quarter][_team1id].gameID = _gameid;
@@ -57,7 +57,7 @@ contract Scoracle is Ownable {
             block.timestamp
         );
     }
-    
+
     function getTeamsDataForQuarter(uint256 _gameid, uint256 _quarter, uint256 _team1id, uint256 _team2id) internal view returns(uint256, uint256, uint256, uint256, uint256, uint256) {
         return (
             teamStatsForQuarter[_gameid][_quarter][_team1id].gameID, 
