@@ -100,8 +100,7 @@ function randMod(uint _modulus) internal returns(uint) {
    randNonce++;  
    return uint(keccak256(abi.encodePacked(now, 
                                           msg.sender, 
-                                          randNonce))) % _
-                                          modulus;
+                                          randNonce))) % _modulus;
  }
 }
 
