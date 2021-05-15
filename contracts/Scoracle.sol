@@ -4,16 +4,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Scoracle is Ownable {
 
-    enum Quarter { FIRST, SECOND, THIRD, FOURTH }
-
     struct Team {
         uint256 gameID;
         uint256 teamID;
         uint256 score;
         uint256 quarter;
     }
-
-    //mapping(uint256 => mapping(uint256 => Team)) public teamStatsForQuarter;
 
     mapping(uint256 => mapping(uint256 => mapping(uint256 => Team))) public teamStatsForQuarter;
 
@@ -33,6 +29,7 @@ contract Scoracle is Ownable {
      * @dev - Call this function to send the data in the smart contract
      */
     function recordScore(uint256 _gameid, uint256 _quarter, uint256 _team1id, uint256 _team2id, uint256 _team1score, uint256 _team2score) external {
+        require( ((_quarter == 1) || (_quarter == 2) || (_quarter == 3) || (_quarter == 4)), "Not a valid quarter." );
 
         // set team 1 stats for Quarter
         teamStatsForQuarter[_gameid][_quarter][_team1id].gameID = _gameid;
