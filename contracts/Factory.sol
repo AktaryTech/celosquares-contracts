@@ -16,7 +16,7 @@ contract Factory {
 
     //function to deploy your own pool
     function createPool(address scoracleAddr,
-                    address charityAddr,
+                    address payable charityAddr,
                      string memory firstTeam, 
                      string memory secondTeam, 
                      uint256 team1id, 
@@ -26,6 +26,7 @@ contract Factory {
                      uint256 quarterPoolAllocation, 
                      uint finalPoolAllocation) public {
         Pool p = new Pool(scoracleAddr,
+                     charityAddr,
                      firstTeam, 
                      secondTeam, 
                      team1id, 
