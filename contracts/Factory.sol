@@ -1,9 +1,9 @@
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "./Scoracle.sol";
 import "./gameLogic.sol";
 
-contract Genesis {
+contract Factory {
     // maps address of deployed pool contract to its organizer (sender)
     mapping(address => address) PoolsAndOrganizers;
 
