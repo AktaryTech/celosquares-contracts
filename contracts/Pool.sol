@@ -23,6 +23,8 @@ function randMod(uint _modulus) internal returns(uint) {
 }
 
 contract Pool is Context, Ownable, GeeksForGeeksRandom {
+    // **IMPORTANT** randomization is commented out for demo purposes
+    
     // owner has special privileges
     address private _owner;
     
@@ -55,10 +57,10 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     bool public quarter4Paid;
 
     uint256[10] rows;
-    mapping (uint => bool) rowNums;
+    // mapping (uint => bool) rowNums;
 
     uint256[10] columns;
-    mapping (uint => bool) columnNums;
+    // mapping (uint => bool) columnNums;
 
     struct Meta {
         uint256 x;
@@ -119,16 +121,16 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     }
 
    // this uses the "random" number generate to create a random int between 0-9, and add it to the row/column, ensuring no redundancy
-   function setSquare(uint i, uint[10] storage arr, mapping(uint => bool) storage map) internal onlyOwner {
-        uint randNum = randMod(1000);
-        if (map[randNum] == false) {
-            map[randNum] = true;
-            arr[i] = randNum;
-        }
-        else {
-           setSquare(i, arr, map);
-        }
-    }
+//    function setSquare(uint i, uint[10] storage arr, mapping(uint => bool) storage map) internal onlyOwner {
+//         uint randNum = randMod(1000);
+//         if (map[randNum] == false) {
+//             map[randNum] = true;
+//             arr[i] = randNum;
+//         }
+//         else {
+//            setSquare(i, arr, map);
+//         }
+//     }
     
     // calls setSquare and puts numbers into arrays and maps, uses array to put into each Square struct
     // sets prize amounts
@@ -138,8 +140,10 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         boardSet = true;
         
         for(uint i = 0; i < 10; i++) {
-            setSquare(i, rows, rowNums);
-            setSquare(i, columns, columnNums);
+            // setSquare(i, rows, rowNums);
+            // setSquare(i, columns, columnNums);
+            rows[i] = i;
+            columns[i] = i;
         }
 
         for(uint i = 0; i < 10; i++) {
