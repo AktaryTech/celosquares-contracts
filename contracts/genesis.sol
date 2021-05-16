@@ -1,7 +1,7 @@
 pragma solidity ^0.7.6;
 
-import "./Scoracle.sol"
-import "./gameLogic.sol"
+import "./Scoracle.sol";
+import "./gameLogic.sol";
 
 contract Genesis {
     // maps address of deployed pool contract to its organizer (sender)
@@ -33,7 +33,7 @@ contract Genesis {
                      gameid, 
                      betSize, 
                      quarterPoolAllocation, 
-                     finalPoolAllocation)
+                     finalPoolAllocation);
         
         address pAddr = address(p);
         PoolsAndOrganizers[pAddr] = msg.sender; 
