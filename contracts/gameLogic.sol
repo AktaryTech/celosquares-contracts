@@ -121,16 +121,19 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     uint256 public betAmount;
     uint256 public prizePool;
     
-
     
     // expressed as %, between 0 and 1 
     uint256 public betForQuarter;
     uint256 public betForFinal; 
 
     uint256 public quarter1Prize;
+    bool public quarter1Paid;
     uint256 public quarter2Prize;
+    bool public quarter2Paid;
     uint256 public quarter3Prize;
+    bool public quarter3Paid;
     uint256 public quarter4Prize;
+    bool public quarter4Paid;
 
     uint256[10] rows;
     mapping (uint => bool) rowNums;
@@ -266,6 +269,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         
         // set metadata and amount to send
         if(curr == quarter1) {
+            require(quarter1Paid, "You already paid out for Q1!");
+            quarter1Paid = true; 
             winner.wonQuarter1 = true;
             prizeToSend = quarter1Prize;
             if(winner.hasbet) {
@@ -279,6 +284,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
             }
         }
         else if (curr == quarter2) {
+            require(quarter2Paid, "You already paid out for Q2!");
+            quarter2Paid = true; 
             winner.wonQuarter2 = true;
             prizeToSend = quarter2Prize;
             if(winner.hasbet) {
@@ -291,6 +298,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
             }
         }
         else if (curr = quarter3) {
+            require(quarter3Paid, "You already paid out for Q3!");
+            quarter3Paid = true; 
             winner.wonQuarter3 = true;
             prizeToSend = quarter3Prize;
             if(winner.hasbet) {
@@ -302,6 +311,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
             }
         }
         else {
+            require(quarter4Paid, "You already paid out for Q4!");
+            quarter4Paid = true; 
             winner.wonQuarter4 = true;
             prizeToSend = quarter4Prize;
             if(winner.hasbet) {
@@ -312,13 +323,6 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
                 charity.transfer(prizeToSend);
             }
         }
-        
-        
-
-        // cash out!    
-        
-        
-        
 
     }
 
