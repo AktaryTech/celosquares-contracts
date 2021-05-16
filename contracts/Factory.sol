@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "./Scoracle.sol";
-import "./gameLogic.sol";
+import "./Pool.sol";
 
 contract Factory {
     // maps address of organizer (sender) to its contract
