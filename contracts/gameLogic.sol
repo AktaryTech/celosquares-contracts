@@ -104,11 +104,12 @@ function randMod(uint _modulus) internal returns(uint) {
  }
 }
 
-contract Game is Context, Ownable, GeeksForGeeksRandom {
+contract Pool is Context, Ownable, GeeksForGeeksRandom {
     // owner has special privileges
     address private _owner;
     
     address public charity;
+    address public oracle; 
 
     // don't want the board numbers to be set more than once
     bool private boardSet; 
@@ -173,9 +174,10 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         curr = input;
     }
 
-    
+    event MetaData(address _this, address _organizer);
 
-    constructor(address charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint final) {
+    constructor(address scoracleAddr, address charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint final) {
+        oracle = scoracleAddr;
         charity = charityAddr; 
         _owner = _msgSender();
         teamOne = firstTeam;
@@ -187,6 +189,7 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         require(3*quarter + final == 1, "Need to set % of pool such that 3 x quarter + final = 1... we recommend 20% per quarter and 40% for the final pool");
         betForQuarter = quarter;
         betForFinal = final;
+        emit MetaData(address(this), _owner);
     }
 
     function placeBet(uint256 x, uint256 y) payable external {
@@ -215,7 +218,7 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     
     // calls setSquare and puts numbers into arrays and maps, uses array to put into each Square struct
     // sets prize amounts
-    function startGame() public onlyOwner {
+    function startGame() external public onlyOwner {
         //can only be called once per game
         require(boardSet == false, "The board is already set");
         boardSet = true;
@@ -240,13 +243,13 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         quarter4prize = prizePool * betForFinal;
     }
     
-    Scoracle internal scoracle = new Scoracle();
+    Scoracle internal scoracle = Scoracle(oracle);
 
 
     // takes raw team score, mod divides by 10 to get last digit
     // loops through all squares to find winner
     // pays based off whether it's a quarter or final score 
-    function findAndPayWinner() {
+    function findAndPayWinner() external public onlyOwner {
         //gather gata from scoracle and get last digits
         (uint256 teamOneScore, uint256 teamTwoScore) = scoracle.getTeamsDataForQuarter(gameId, curr, teamOneid, teamTwoid);    
         uint teamOneLastDigit = teamOneScore % 10;
@@ -254,14 +257,21 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         
         //search for winner
         Square winner; 
+        bool hasWinner;
         for(int i = 0, i < 10; i++) {
             for(int j = 0, j < 10; j ++) {
                 sq = board[i][j];
                 if (sq.firstTeamDigit == teamOneLastDigit && sq.secondTeamDigit == teamTwoLastDigit) {
                     winner = sq;
+                    hasWinner = true;
                     break;
                 }
             }
+            
+            if (hasWinner) {
+                break;
+            }
+
         }
         
         uint256 prizeToSend;
