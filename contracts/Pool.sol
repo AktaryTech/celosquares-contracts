@@ -1,4 +1,4 @@
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "./Scoracle.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,7 +16,7 @@ uint randNonce = 0;
 function randMod(uint _modulus) internal returns(uint) {
    // increase nonce
    randNonce++;  
-   return uint(keccak256(abi.encodePacked(now, 
+   return uint(keccak256(abi.encodePacked(block.timestamp, 
                                           msg.sender, 
                                           randNonce))) % _modulus;
  }
@@ -26,7 +26,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     // owner has special privileges
     address private _owner;
     
-    address public charity;
+    address payable public charity;
     address public oracle; 
 
     // don't want the board numbers to be set more than once
@@ -78,7 +78,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
 
     event MetaData(address _this, address _organizer);
 
-    constructor(address scoracleAddr, address charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint fin) {
+    constructor(address scoracleAddr, address payable charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint fin) {
         oracle = scoracleAddr;
         charity = charityAddr; 
         _owner = msg.sender;
@@ -95,11 +95,11 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     }
 
     function placeBet(uint256 x, uint256 y) payable external {
-        address bettor = msg.sender;
+        address payable bettor = payable(msg.sender);
         require(betsPerPerson[bettor] < 10, "You can only place bets on 10 squares");
-        require(Square[x][y].hasBet == false, "This square already has a bet placed");
+        require(board[x][y].hasBet == false, "This square already has a bet placed");
         require(msg.value == betAmount, "Please send the proper amount to place a bet");
-        Square mySquare;
+        Square memory mySquare;
         board[x][y] = mySquare;
         mySquare.bettor = bettor;
         mySquare.hasBet = true;
@@ -108,14 +108,14 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     }
 
    // this uses the "random" number generate to create a random int between 0-9, and add it to the row/column, ensuring no redundancy
-   function setSquare(uint i, uint[] arr, mapping(uint => bool) map) internal onlyOwner {
+   function setSquare(uint i, uint[10] storage arr, mapping(uint => bool) storage map) internal onlyOwner {
         uint randNum = randMod(1000);
         if (map[randNum] == false) {
             map[randNum] = true;
             arr[i] = randNum;
         }
         else {
-            setSquare(i);
+           setSquare(i, arr, map);
         }
     }
     
@@ -126,14 +126,14 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         require(boardSet == false, "The board is already set");
         boardSet = true;
         
-        for(int i = 0; i < 10; i++) {
+        for(uint i = 0; i < 10; i++) {
             setSquare(i, rows, rowNums);
             setSquare(i, columns, columnNums);
         }
 
-        for(int i = 0; i < 10; i++) {
-            for(int j = 0; j < 10; j++) {
-                Square needToSet = board[i][j];
+        for(uint i = 0; i < 10; i++) {
+            for(uint j = 0; j < 10; j++) {
+                Square storage needToSet = board[i][j];
                 needToSet.firstTeamDigit = rows[i];
                 needToSet.secondTeamDigit = columns[i];
                 needToSet.isSet = true; 
@@ -154,16 +154,16 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     // pays based off whether it's a quarter or final score 
     function findAndPayWinner(uint256 quarter) external onlyOwner {
         //gather gata from scoracle and get last digits
-        (uint256 teamOneScore, uint256 teamTwoScore) = scoracle.getTeamsDataForQuarter(gameId, curr, teamOneid, teamTwoid);    
+        (uint256 teamOneScore, uint256 teamTwoScore) = scoracle.getTeamsDataForQuarter(gameId, quarter, teamOneid, teamTwoid);    
         uint teamOneLastDigit = teamOneScore % 10;
         uint teamTwoLastDigit = teamTwoScore % 10;
         
         //search for winner
-        Square winner; 
+        Square memory winner; 
         bool hasWinner;
-        for(int i = 0; i < 10; i++) {
-            for(int j = 0; j < 10; j ++) {
-                Square sq;
+        for(uint i = 0; i < 10; i++) {
+            for(uint j = 0; j < 10; j ++) {
+                Square memory sq;
                 sq = board[i][j];
                 if (sq.firstTeamDigit == teamOneLastDigit && sq.secondTeamDigit == teamTwoLastDigit) {
                     winner = sq;
@@ -186,14 +186,14 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
             quarter1Paid = true; 
             winner.wonQuarter1 = true;
             prizeToSend = quarter1Prize;
-            if(winner.hasbet) {
-                address dest = winner.bettor;
+            if(winner.hasBet) {
+                address payable dest = payable(winner.bettor);
                 dest.transfer(prizeToSend);
             }
             else{
-                quarter2prize += quarter1Prize * .25;
-                quarter3prize += quarter1Prize * .25;
-                quarter4prize += quarter1Prize * .5;
+                quarter2Prize += quarter1Prize / 4;
+                quarter3Prize += quarter1Prize / 4;
+                quarter4Prize += quarter1Prize / 2;
             }
         }
         else if (quarter == 2) {
@@ -201,13 +201,13 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
             quarter2Paid = true; 
             winner.wonQuarter2 = true;
             prizeToSend = quarter2Prize;
-            if(winner.hasbet) {
-                address dest = winner.bettor;
+            if(winner.hasBet) {
+                address payable dest = payable(winner.bettor);
                 dest.transfer(prizeToSend);
             }
             else{
-                quarter3prize += quarter2Prize * .25;
-                quarter4prize += quarter2Prize * .75;
+                quarter3Prize += quarter2Prize / 4;
+                quarter4Prize += quarter2Prize * 3 / 4;
             }
         }
         else if (quarter == 3) {
@@ -215,12 +215,12 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
             quarter3Paid = true; 
             winner.wonQuarter3 = true;
             prizeToSend = quarter3Prize;
-            if(winner.hasbet) {
-                address dest = winner.bettor;
+            if(winner.hasBet) {
+                address payable dest = payable(winner.bettor);
                 dest.transfer(prizeToSend);
             }
             else{
-                quarter4prize += quarter3Prize;
+                quarter4Prize += quarter3Prize;
             }
         }
         else {
@@ -228,14 +228,15 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
             quarter4Paid = true; 
             winner.wonQuarter4 = true;
             prizeToSend = quarter4Prize;
-            if(winner.hasbet) {
-                address dest = winner.bettor;
+            if(winner.hasBet) {
+                address payable dest = payable(winner.bettor);
                 dest.transfer(prizeToSend);
             }
             else{
                 charity.transfer(prizeToSend);
             }
         }
+
 
     }
 
