@@ -14,6 +14,8 @@ contract Scoracle is Ownable {
         uint timestamp
     );
 
+    event UpcomingGameId(uint256 _gameid);
+
     struct Team {
         uint256 score;
     }
@@ -32,6 +34,7 @@ contract Scoracle is Ownable {
 
     function setUpcomingGameId(uint256 _gameid) external {
         gameids[_gameid].gameid = _gameid;
+        emit UpcomingGameId(_gameid);
     }
 
     /**
