@@ -60,7 +60,14 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     uint256[10] columns;
     mapping (uint => bool) columnNums;
 
+    struct Meta {
+        uint256 x;
+        uint256 y;
+    }
+
     mapping (address => uint) betsPerPerson;
+    mapping(address => Meta[]) betMap; 
+    // potentially add coord. pairs here to find winner easily? 
 
     struct Square {
         address bettor;
@@ -76,7 +83,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
 
     Square[10][10] board; 
 
-    event MetaData(address _this, address _organizer);
+    event PoolCreated(address _this, address _organizer);
 
     constructor(address scoracleAddr, address payable charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint fin) {
         oracle = scoracleAddr;
@@ -91,7 +98,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         require(3*quarter + fin == 1, "Need to set % of pool such that 3 x quarter + final = 1... we recommend 20% per quarter and 40% for the final pool");
         betForQuarter = quarter;
         betForFinal = fin;
-        emit MetaData(address(this), _owner);
+        emit PoolCreated(address(this), _owner);
     }
 
     function placeBet(uint256 x, uint256 y) payable external {
@@ -104,6 +111,10 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         mySquare.bettor = bettor;
         mySquare.hasBet = true;
         betsPerPerson[bettor] += 1;
+        Meta memory bet;
+        bet.x = x;
+        bet.y = y; 
+        betMap[bettor].push(bet);
         prizePool += betAmount; 
     }
 
@@ -152,7 +163,8 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     // takes raw team score, mod divides by 10 to get last digit
     // loops through all squares to find winner
     // pays based off whether it's a quarter or final score 
-    function findAndPayWinner(uint256 quarter) external onlyOwner {
+    function getPaid(uint256 quarter) external {
+        require( ((quarter == 1) || (quarter == 2) || (quarter == 3) || (quarter == 4)), "Not a valid quarter." );
         //gather gata from scoracle and get last digits
         (uint256 teamOneScore, uint256 teamTwoScore) = scoracle.getTeamsDataForQuarter(gameId, quarter, teamOneid, teamTwoid);    
         uint teamOneLastDigit = teamOneScore % 10;
@@ -160,84 +172,60 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         
         //search for winner
         Square memory winner; 
-        bool hasWinner;
-        for(uint i = 0; i < 10; i++) {
-            for(uint j = 0; j < 10; j ++) {
-                Square memory sq;
-                sq = board[i][j];
-                if (sq.firstTeamDigit == teamOneLastDigit && sq.secondTeamDigit == teamTwoLastDigit) {
+        for(uint i = 0; i < betsPerPerson[msg.sender]; i++) {
+            Meta memory m = betMap[msg.sender][i];
+            Square memory sq = board[m.x][m.y];
+            if (sq.firstTeamDigit == teamOneLastDigit && sq.secondTeamDigit == teamTwoLastDigit) {
                     winner = sq;
-                    hasWinner = true;
                     break;
                 }
-            }
-            
-            if (hasWinner) {
-                break;
-            }
-
         }
         
         uint256 prizeToSend;
         
         // set metadata and amount to send
         if(quarter == 1) {
-            require(quarter1Paid, "You already paid out for Q1!");
+            require(quarter1Paid == false, "You already paid out for Q1!");
             quarter1Paid = true; 
             winner.wonQuarter1 = true;
             prizeToSend = quarter1Prize;
-            if(winner.hasBet) {
-                address payable dest = payable(winner.bettor);
-                dest.transfer(prizeToSend);
-            }
-            else{
-                quarter2Prize += quarter1Prize / 4;
-                quarter3Prize += quarter1Prize / 4;
-                quarter4Prize += quarter1Prize / 2;
-            }
+            address payable dest = payable(winner.bettor);
+            dest.transfer(prizeToSend);
+            prizePool -= prizeToSend;
         }
         else if (quarter == 2) {
-            require(quarter2Paid, "You already paid out for Q2!");
+            require(quarter2Paid == false, "You already paid out for Q2!");
             quarter2Paid = true; 
             winner.wonQuarter2 = true;
             prizeToSend = quarter2Prize;
-            if(winner.hasBet) {
-                address payable dest = payable(winner.bettor);
-                dest.transfer(prizeToSend);
-            }
-            else{
-                quarter3Prize += quarter2Prize / 4;
-                quarter4Prize += quarter2Prize * 3 / 4;
-            }
+            address payable dest = payable(winner.bettor);
+            dest.transfer(prizeToSend);
+            prizePool -= prizeToSend;
         }
         else if (quarter == 3) {
-            require(quarter3Paid, "You already paid out for Q3!");
+            require(quarter3Paid == false, "You already paid out for Q3!");
             quarter3Paid = true; 
             winner.wonQuarter3 = true;
             prizeToSend = quarter3Prize;
-            if(winner.hasBet) {
-                address payable dest = payable(winner.bettor);
-                dest.transfer(prizeToSend);
-            }
-            else{
-                quarter4Prize += quarter3Prize;
-            }
+            address payable dest = payable(winner.bettor);
+            dest.transfer(prizeToSend);
+            prizePool -= prizeToSend;
         }
         else {
-            require(quarter4Paid, "You already paid out for Q4!");
+            require(quarter4Paid == false, "You already paid out for Q4!");
             quarter4Paid = true; 
             winner.wonQuarter4 = true;
             prizeToSend = quarter4Prize;
-            if(winner.hasBet) {
-                address payable dest = payable(winner.bettor);
-                dest.transfer(prizeToSend);
-            }
-            else{
-                charity.transfer(prizeToSend);
-            }
+            address payable dest = payable(winner.bettor);
+            dest.transfer(prizeToSend);
+            prizePool -= prizeToSend;
         }
 
 
+    }
+
+    function donateLostBetsToCharity() external onlyOwner {
+        charity.transfer(prizePool);
     }
 
 }

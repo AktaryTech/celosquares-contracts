@@ -4,8 +4,8 @@ import "./Scoracle.sol";
 import "./gameLogic.sol";
 
 contract Factory {
-    // maps address of deployed pool contract to its organizer (sender)
-    mapping(address => address) PoolsAndOrganizers;
+    // maps address of organizer (sender) to its contract
+    mapping(address => address) PoolsByOrganizer;
 
     // number of pools that have been set up
     uint256 numPools;
@@ -37,7 +37,7 @@ contract Factory {
                      finalPoolAllocation);
         
         address pAddr = address(p);
-        PoolsAndOrganizers[pAddr] = msg.sender; 
+        PoolsByOrganizer[msg.sender] = pAddr; 
         numPools += 1;
     }
 }
