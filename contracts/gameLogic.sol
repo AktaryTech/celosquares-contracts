@@ -76,22 +76,6 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
 
     Square[10][10] board; 
 
-    // this specifies what bet we're dealing with, whether it's the end score of a particular quarter or the whole game...
-    // quarter4 should be a bigger prize 
-    enum poolSize {
-        init,
-        quarter1,
-        quarter2,
-        quarter3,
-        quarter4
-    }
-
-    poolSize public curr;
-    
-    function changePoolSize(poolSize input) public onlyOwner{
-        curr = input;
-    }
-
     event MetaData(address _this, address _organizer);
 
     constructor(address scoracleAddr, address charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint fin) {
@@ -156,10 +140,10 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
             }
         }
 
-        quarter1prize = prizePool * betForQuarter;
-        quarter2prize = prizePool * betForQuarter;
-        quarter3prize = prizePool * betForQuarter;
-        quarter4prize = prizePool * betForFinal;
+        quarter1Prize = prizePool * betForQuarter;
+        quarter2Prize = prizePool * betForQuarter;
+        quarter3Prize = prizePool * betForQuarter;
+        quarter4Prize = prizePool * betForFinal;
     }
     
     Scoracle internal scoracle = Scoracle(oracle);
@@ -168,7 +152,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
     // takes raw team score, mod divides by 10 to get last digit
     // loops through all squares to find winner
     // pays based off whether it's a quarter or final score 
-    function findAndPayWinner() external onlyOwner {
+    function findAndPayWinner(uint256 quarter) external onlyOwner {
         //gather gata from scoracle and get last digits
         (uint256 teamOneScore, uint256 teamTwoScore) = scoracle.getTeamsDataForQuarter(gameId, curr, teamOneid, teamTwoid);    
         uint teamOneLastDigit = teamOneScore % 10;
@@ -179,6 +163,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         bool hasWinner;
         for(int i = 0; i < 10; i++) {
             for(int j = 0; j < 10; j ++) {
+                Square sq;
                 sq = board[i][j];
                 if (sq.firstTeamDigit == teamOneLastDigit && sq.secondTeamDigit == teamTwoLastDigit) {
                     winner = sq;
@@ -196,7 +181,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
         uint256 prizeToSend;
         
         // set metadata and amount to send
-        if(curr == quarter1) {
+        if(quarter == 1) {
             require(quarter1Paid, "You already paid out for Q1!");
             quarter1Paid = true; 
             winner.wonQuarter1 = true;
@@ -211,7 +196,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
                 quarter4prize += quarter1Prize * .5;
             }
         }
-        else if (curr == quarter2) {
+        else if (quarter == 2) {
             require(quarter2Paid, "You already paid out for Q2!");
             quarter2Paid = true; 
             winner.wonQuarter2 = true;
@@ -225,7 +210,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
                 quarter4prize += quarter2Prize * .75;
             }
         }
-        else if (curr = quarter3) {
+        else if (quarter == 3) {
             require(quarter3Paid, "You already paid out for Q3!");
             quarter3Paid = true; 
             winner.wonQuarter3 = true;

@@ -24,7 +24,7 @@ contract Genesis {
                      uint256 gameid, 
                      uint256 betSize, 
                      uint256 quarterPoolAllocation, 
-                     uint finalPoolAllocation) {
+                     uint finalPoolAllocation) public {
         Pool p = new Pool(scoracleAddr,
                      firstTeam, 
                      secondTeam, 
