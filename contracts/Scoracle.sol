@@ -20,32 +20,15 @@ contract Scoracle is Ownable {
         uint256 score;
     }
 
-    struct GameID {
-        uint gameid;
-    }
-
     mapping(uint256 => mapping(uint256 => mapping(uint256 => Team))) public teamStatsForQuarter;
 
-    uint256[] upcomingGameIds;
-
-    mapping(uint256 => GameID) public gameids;
-
     constructor() public {}
-
-    function setUpcomingGameId(uint256 _gameid) external {
-        gameids[_gameid].gameid = _gameid;
-        emit UpcomingGameId(_gameid);
-    }
 
     /**
      * @dev - Call this function to send the data in the smart contract
      */
     function recordScore(uint256 _gameid, uint256 _quarter, uint256 _team1id, uint256 _team2id, uint256 _team1score, uint256 _team2score) external onlyOwner {
         require( ((_quarter == 1) || (_quarter == 2) || (_quarter == 3) || (_quarter == 4)), "Not a valid quarter." );
-
-        if(_quarter > 1) {
-            delete gameids[_gameid].gameid;
-        }
         
         teamStatsForQuarter[_gameid][_quarter][_team1id].score = _team1score;
         teamStatsForQuarter[_gameid][_quarter][_team2id].score = _team2score;
