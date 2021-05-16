@@ -132,4 +132,6 @@ temp/
 ./artifacts
 ./cache
 
+build
+
 # End of https://www.toptal.com/developers/gitignore/api/solidity,node

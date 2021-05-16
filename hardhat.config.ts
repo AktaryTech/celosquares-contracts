@@ -66,6 +66,10 @@ export default {
       gasPrice: 0.5 * 10 ** 9,
       gas: 8000000,
     },
+    localhost: {
+        url: "http://127.0.0.1:8545",
+        chainId: 1101
+    },
     hardhat: {
       chainId: 31337,
       accounts,

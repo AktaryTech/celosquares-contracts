@@ -1,18 +1,14 @@
 import { ICeloNetwork, networkNames } from "@ubeswap/hardhat-celo";
-import * as fs from "fs/promises";
+import * as fs from "fs";
 import { ActionType, HardhatRuntimeEnvironment } from "hardhat/types";
-//import { deployExchange } from "./001_exchange";
-//import { deployLiquidity } from "./002_liquidity";
-//import { updateFeeToSetter } from "./003_update-fee-to-setter";
+import { deployContracts } from "./001_contracts";
 
 export type DeployFunction = (
   env: HardhatRuntimeEnvironment
 ) => Promise<{ [contractName: string]: string }>;
 
 const deployers: { [step: string]: DeployFunction } = {
-  //exchange: deployExchange,
-  //liquidity: deployLiquidity,
-  //"update-fee-to-setter": updateFeeToSetter,
+  contracts: deployContracts,
 };
 
 const makeConfigPath = (step: string, chainId: ICeloNetwork): string =>
@@ -28,7 +24,7 @@ const writeDeployment = async (
   Object.entries(addresses).forEach(([name, addr]) =>
     console.log(`${name}: ${addr}`)
   );
-  await fs.writeFile(configPath, JSON.stringify(addresses, null, 2));
+  await fs.promises.writeFile(configPath, JSON.stringify(addresses, null, 2));
 };
 
 export const getDeployment = async (
@@ -36,7 +32,7 @@ export const getDeployment = async (
   chainId: ICeloNetwork
 ): Promise<Record<string, string>> => {
   const configPath = makeConfigPath(step, chainId);
-  return JSON.parse((await fs.readFile(configPath)).toString());
+  return JSON.parse((await fs.promises.readFile(configPath)).toString());
 };
 
 export const deploy: ActionType<{ step: string }> = async ({ step }, env) => {

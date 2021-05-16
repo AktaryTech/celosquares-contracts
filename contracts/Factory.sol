@@ -1,4 +1,6 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.12;
 
 import "./Scoracle.sol";
 import "./Pool.sol";
@@ -10,12 +12,13 @@ contract Factory {
     // number of pools that have been set up
     uint256 numPools;
 
-    // deploy oracle and retrieve address
-    Scoracle internal scoracle = new Scoracle();
-    address scoracleAddr = address(scoracle);
+    address public immutable scoracle;
+    constructor(address _scoracle) public {
+        scoracle = _scoracle;
+    }
 
     //function to deploy your own pool
-    function createPool(address scoracleAddr,
+    function createPool(
                     address payable charityAddr,
                      string memory firstTeam, 
                      string memory secondTeam, 
@@ -25,7 +28,7 @@ contract Factory {
                      uint256 betSize, 
                      uint256 quarterPoolAllocation, 
                      uint finalPoolAllocation) public {
-        Pool p = new Pool(scoracleAddr,
+        Pool p = new Pool(scoracle,
                      charityAddr,
                      firstTeam, 
                      secondTeam, 

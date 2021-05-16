@@ -1,4 +1,6 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.12;
 
 import "./Scoracle.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -87,7 +89,7 @@ contract Pool is Context, Ownable, GeeksForGeeksRandom {
 
     event PoolCreated(address _this, address _organizer);
 
-    constructor(address scoracleAddr, address payable charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint fin) {
+    constructor(address scoracleAddr, address payable charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint fin) public {
         oracle = scoracleAddr;
         charity = charityAddr; 
         _owner = msg.sender;
