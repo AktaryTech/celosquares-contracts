@@ -1,6 +1,6 @@
 pragma solidity ^0.7.6;
 
-
+import "./Scoracle.sol"
 /*
  * @dev Provides information about the current execution context, including the
  * sender of the transaction and its data. While these are generally available
@@ -111,8 +111,11 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     // don't want the board numbers to be set more than once
     bool private boardSet; 
 
+    uint256 public gameId;
     string public teamOne;
+    uint256 public teamOneid;
     string public teamTwo;
+    uint256 public teamTwoid; 
     uint256 public betAmount;
     uint256 public prizePool;
     
@@ -132,8 +135,10 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         address bettor;
         bool hasBet; 
         bool isSet; 
-        bool wonQuarter;
-        bool wonGame; 
+        bool wonQuarter1;
+        bool wonQuarter2;
+        bool wonQuarter3;
+        bool wonQuarter4;
         uint256 firstTeamDigit;
         uint256 secondTeamDigit; 
     }
@@ -141,10 +146,13 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     Square[10][10] board; 
 
     // this specifies what bet we're dealing with, whether it's the end score of a particular quarter or the whole game...
-    // the latter of which should be a bigger prize 
+    // quarter4 should be a bigger prize 
     enum poolSize {
-        quarter,
-        final
+        default,
+        quarter1,
+        quarter2,
+        quarter3,
+        quarter4
     }
 
     poolSize public curr;
@@ -155,10 +163,13 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
 
     
 
-    constructor(string memory firstTeam, string memory secondTeam, uint256 bet, uint256 quarter, uint final) {
+    constructor(string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint final) {
         _owner = _msgSender();
         teamOne = firstTeam;
         teamTwo = secondTeam;
+        teamOneid = team1id;
+        teamTwoid = team2id;
+        gameId = gameid; 
         betAmount = bet; 
         require(3*quarter + final == 1, "Need to set % of pool such that 3 x quarter + final = 1... we recommend 20% per quarter and 40% for the final pool");
         betForQuarter = quarter;
@@ -211,13 +222,19 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     }
     
     //TODO: add some way to read scoracle data and get legit scores
-    
+    Scoracle internal scoracle = new Scoracle();
+
+
     // takes raw team score, mod divides by 10 to get last digit
     // loops through all squares to find winner
     // pays based off whether it's a quarter or final score 
-    function findAndPayWinner(uint teamOneScore, uint teamTwoScore) {
+    function findAndPayWinner() {
+        //gather gata from scoracle and get last digits
+        (uint256 teamOneScore, uint256 teamTwoScore) = scoracle.getTeamsDataForQuarter(gameId, curr, teamOneid, teamTwoid);    
         uint teamOneLastDigit = teamOneScore % 10;
         uint teamTwoLastDigit = teamTwoScore % 10;
+        
+        //search for winner
         Square winner; 
         for(int i = 0, i < 10; i++) {
             for(int j = 0, j < 10; j ++) {
@@ -228,21 +245,34 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
                 }
             }
         }
-        if(curr == quarter) {
-            winner.wonQuarter = true;
-            uint256 prizeToSend = prizePool * betForQuarter;
-            prizePool -= prizeToSend;
-            address dest = winner.bettor;
-            dest.transfer(prizeToSend);
+        
+        // set metadata
+        if(curr == quarter1) {
+            winner.wonQuarter1 = true;
+        }
+        else if (curr == quarter2) {
+            winner.wonQuarter2 = true;
+        }
+        else if (curr = quarter3) {
+            winner.wonQuarter3 = true;
         }
         else {
-            winner.wonGame = true;
-            uint256 prizeToSend = prizePool * betForFinal;
-            prizePool -= prizeToSend;
-            address dest = winner.bettor;
-            dest.transfer(prizeToSend);
+            winner.wonQuarter4 = true;
         }
-           
+        
+        // determine amount won
+        if(curr != quarter4) {
+            uint256 prizeToSend = prizePool * betForQuarter;
+            
+        }
+        else {
+            uint256 prizeToSend = prizePool * betForFinal;
+        }
+
+        // cash out!    
+        prizePool -= prizeToSend;
+        address dest = winner.bettor;
+        dest.transfer(prizeToSend);
 
     }
 
