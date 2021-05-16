@@ -197,7 +197,7 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         board[x][y] = Square mySquare;
         mySquare.bettor = bettor;
         mySquare.hasBet = true;
-        betersPerPerson[bettor] += 1;
+        betsPerPerson[bettor] += 1;
         prizePool += betAmount; 
     }
 
