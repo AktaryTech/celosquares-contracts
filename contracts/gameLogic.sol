@@ -108,6 +108,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     // owner has special privileges
     address private _owner;
     
+    address public charity;
+
     // don't want the board numbers to be set more than once
     bool private boardSet; 
 
@@ -119,9 +121,16 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     uint256 public betAmount;
     uint256 public prizePool;
     
+
+    
     // expressed as %, between 0 and 1 
     uint256 public betForQuarter;
     uint256 public betForFinal; 
+
+    uint256 public quarter1Prize;
+    uint256 public quarter2Prize;
+    uint256 public quarter3Prize;
+    uint256 public quarter4Prize;
 
     uint256[10] rows;
     mapping (uint => bool) rowNums;
@@ -163,7 +172,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
 
     
 
-    constructor(string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint final) {
+    constructor(address charityAddr, string memory firstTeam, string memory secondTeam, uint256 team1id, uint256 team2id, uint256 gameid, uint256 bet, uint256 quarter, uint final) {
+        charity = charityAddr; 
         _owner = _msgSender();
         teamOne = firstTeam;
         teamTwo = secondTeam;
@@ -201,7 +211,8 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
     }
     
     // calls setSquare and puts numbers into arrays and maps, uses array to put into each Square struct
-    function setBoard() public onlyOwner {
+    // sets prize amounts
+    function startGame() public onlyOwner {
         //can only be called once per game
         require(boardSet == false, "The board is already set");
         boardSet = true;
@@ -219,6 +230,11 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
                 needToSet.isSet = true; 
             }
         }
+
+        quarter1prize = prizePool * betForQuarter;
+        quarter2prize = prizePool * betForQuarter;
+        quarter3prize = prizePool * betForQuarter;
+        quarter4prize = prizePool * betForFinal;
     }
     
     //TODO: add some way to read scoracle data and get legit scores
@@ -246,33 +262,63 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
             }
         }
         
-        // set metadata
+        uint256 prizeToSend;
+        
+        // set metadata and amount to send
         if(curr == quarter1) {
             winner.wonQuarter1 = true;
+            prizeToSend = quarter1Prize;
+            if(winner.hasbet) {
+                address dest = winner.bettor;
+                dest.transfer(prizeToSend);
+            }
+            else{
+                quarter2prize += quarter1Prize * .25;
+                quarter3prize += quarter1Prize * .25;
+                quarter4prize += quarter1Prize * .5;
+            }
         }
         else if (curr == quarter2) {
             winner.wonQuarter2 = true;
+            prizeToSend = quarter2Prize;
+            if(winner.hasbet) {
+                address dest = winner.bettor;
+                dest.transfer(prizeToSend);
+            }
+            else{
+                quarter3prize += quarter2Prize * .25;
+                quarter4prize += quarter2Prize * .75;
+            }
         }
         else if (curr = quarter3) {
             winner.wonQuarter3 = true;
+            prizeToSend = quarter3Prize;
+            if(winner.hasbet) {
+                address dest = winner.bettor;
+                dest.transfer(prizeToSend);
+            }
+            else{
+                quarter4prize += quarter3Prize;
+            }
         }
         else {
             winner.wonQuarter4 = true;
+            prizeToSend = quarter4Prize;
+            if(winner.hasbet) {
+                address dest = winner.bettor;
+                dest.transfer(prizeToSend);
+            }
+            else{
+                charity.transfer(prizeToSend);
+            }
         }
         
-        // determine amount won
-        if(curr != quarter4) {
-            uint256 prizeToSend = prizePool * betForQuarter;
-            
-        }
-        else {
-            uint256 prizeToSend = prizePool * betForFinal;
-        }
+        
 
         // cash out!    
-        prizePool -= prizeToSend;
-        address dest = winner.bettor;
-        dest.transfer(prizeToSend);
+        
+        
+        
 
     }
 
