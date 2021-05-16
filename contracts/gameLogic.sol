@@ -240,7 +240,6 @@ contract Game is Context, Ownable, GeeksForGeeksRandom {
         quarter4prize = prizePool * betForFinal;
     }
     
-    //TODO: add some way to read scoracle data and get legit scores
     Scoracle internal scoracle = new Scoracle();
 
 
